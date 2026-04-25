@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import type { WeekGrid as WeekGridT } from '../../shared/types';
+import type { ProjectCombo, TimeEntry, WeekGrid as WeekGridT } from '../../shared/types';
 import { formatDayHeader } from '../lib/weekUtils';
 import {
   formatRowForVision,
   formatGridForReview,
 } from '../lib/visionClipboard';
+import { EntryEditModal } from './EntryEditModal';
 
 interface Props {
   week: WeekGridT;
   onMarkRowCopied: (entryIds: string[]) => Promise<void>;
+  onEntriesChanged: () => Promise<void>;
+}
+
+interface CellTarget {
+  combo: ProjectCombo;
+  workDate: string;
+  entries: TimeEntry[];
 }
 
 function fmtTotal(h: number): string {
@@ -16,15 +24,23 @@ function fmtTotal(h: number): string {
   return Number.isInteger(h) ? String(h) : h.toFixed(2).replace(/\.?0+$/, '');
 }
 
-export function WeekGridView({ week, onMarkRowCopied }: Props) {
+function notesTooltip(entries: TimeEntry[]): string {
+  const notes = entries.map((e) => e.note).filter((n): n is string => !!n);
+  return notes.length > 0 ? notes.join('\n') : '';
+}
+
+export function WeekGridView({ week, onMarkRowCopied, onEntriesChanged }: Props) {
   const [flashedRow, setFlashedRow] = useState<string | null>(null);
   const [flashedAll, setFlashedAll] = useState(false);
+  const [cellTarget, setCellTarget] = useState<CellTarget | null>(null);
 
   async function copyRow(rowIdx: number) {
     const row = week.rows[rowIdx];
     const text = formatRowForVision(row, week.dates);
     await navigator.clipboard.writeText(text);
-    const ids = week.dates.flatMap((d) => row.entryIdsByDate[d] ?? []);
+    const ids = week.dates.flatMap((d) =>
+      (row.entriesByDate[d] ?? []).map((e) => e.id),
+    );
     if (ids.length > 0) await onMarkRowCopied(ids);
     setFlashedRow(row.combo.id);
     setTimeout(() => setFlashedRow(null), 1800);
@@ -49,23 +65,23 @@ export function WeekGridView({ week, onMarkRowCopied }: Props) {
   }
 
   return (
-    <div className="grid-card">
-      <table className="grid">
-        <thead>
-          <tr>
-            <th>Project / Phase / Labor</th>
-            {week.dates.map((d) => (
-              <th key={d} className="num">
-                {formatDayHeader(d)}
-              </th>
-            ))}
-            <th className="num">Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {week.rows.map((row, idx) => {
-            return (
+    <>
+      <div className="grid-card">
+        <table className="grid">
+          <thead>
+            <tr>
+              <th>Project / Phase / Labor</th>
+              {week.dates.map((d) => (
+                <th key={d} className="num">
+                  {formatDayHeader(d)}
+                </th>
+              ))}
+              <th className="num">Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {week.rows.map((row, idx) => (
               <tr key={row.combo.id}>
                 <td className="combo">
                   <div className="name">{row.combo.displayName}</div>
@@ -78,12 +94,27 @@ export function WeekGridView({ week, onMarkRowCopied }: Props) {
                 </td>
                 {week.dates.map((d) => {
                   const h = row.hoursByDate[d];
-                  const notes = row.notesByDate[d];
+                  const cellEntries = row.entriesByDate[d] ?? [];
+                  const hasEntries = cellEntries.length > 0;
                   return (
                     <td
                       key={d}
-                      className="num"
-                      title={notes.length > 0 ? notes.join('\n') : ''}
+                      className={`num${hasEntries ? ' editable' : ''}`}
+                      title={
+                        hasEntries
+                          ? `${notesTooltip(cellEntries)}${notesTooltip(cellEntries) ? '\n\n' : ''}Click to edit`
+                          : ''
+                      }
+                      onClick={
+                        hasEntries
+                          ? () =>
+                              setCellTarget({
+                                combo: row.combo,
+                                workDate: d,
+                                entries: cellEntries,
+                              })
+                          : undefined
+                      }
                     >
                       {h === 0 ? '' : fmtTotal(h)}
                     </td>
@@ -97,25 +128,35 @@ export function WeekGridView({ week, onMarkRowCopied }: Props) {
                   )}
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td>Daily totals</td>
-            {week.dates.map((d) => (
-              <td key={d} className="num">
-                {fmtTotal(week.dailyTotals[d])}
-              </td>
             ))}
-            <td className="num">{fmtTotal(week.weekTotal)}</td>
-            <td>
-              <button onClick={copyAll}>Copy All</button>
-              {flashedAll && <span className="copy-flash">copied ✓</span>}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Daily totals</td>
+              {week.dates.map((d) => (
+                <td key={d} className="num">
+                  {fmtTotal(week.dailyTotals[d])}
+                </td>
+              ))}
+              <td className="num">{fmtTotal(week.weekTotal)}</td>
+              <td>
+                <button onClick={copyAll}>Copy All</button>
+                {flashedAll && <span className="copy-flash">copied ✓</span>}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {cellTarget && (
+        <EntryEditModal
+          combo={cellTarget.combo}
+          workDate={cellTarget.workDate}
+          entries={cellTarget.entries}
+          onClose={() => setCellTarget(null)}
+          onChanged={onEntriesChanged}
+        />
+      )}
+    </>
   );
 }

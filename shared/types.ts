@@ -56,8 +56,7 @@ export interface AuditEvent {
 export interface WeekGridRow {
   combo: ProjectCombo;
   hoursByDate: Record<string, number>;
-  entryIdsByDate: Record<string, string[]>;
-  notesByDate: Record<string, string[]>;
+  entriesByDate: Record<string, TimeEntry[]>;
   weekTotal: number;
 }
 

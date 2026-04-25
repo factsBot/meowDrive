@@ -279,25 +279,22 @@ export function createDexieStorage(opts: DexieStorageOptions): MeowApi {
 
         const rows: WeekGridRow[] = combos.map((combo) => {
           const hoursByDate: Record<string, number> = {};
-          const entryIdsByDate: Record<string, string[]> = {};
-          const notesByDate: Record<string, string[]> = {};
+          const entriesByDate: Record<string, TimeEntry[]> = {};
           for (const date of dates) {
             hoursByDate[date] = 0;
-            entryIdsByDate[date] = [];
-            notesByDate[date] = [];
+            entriesByDate[date] = [];
           }
           let weekTotal = 0;
-          for (const entry of entries.filter((e) => e.comboId === combo.id)) {
+          for (const row of entries.filter((e) => e.comboId === combo.id)) {
+            const entry = toEntry(row);
             hoursByDate[entry.workDate] += entry.hours;
-            entryIdsByDate[entry.workDate].push(entry.id);
-            if (entry.note) notesByDate[entry.workDate].push(entry.note);
+            entriesByDate[entry.workDate].push(entry);
             weekTotal += entry.hours;
           }
           return {
             combo: toCombo(combo),
             hoursByDate,
-            entryIdsByDate,
-            notesByDate,
+            entriesByDate,
             weekTotal,
           };
         });

@@ -88,7 +88,13 @@ export default function App({ onSignOut }: AppProps = {}) {
       </div>
 
       <main className="app-body">
-        {week && <WeekGridView week={week} onMarkRowCopied={onMarkRowCopied} />}
+        {week && (
+          <WeekGridView
+            week={week}
+            onMarkRowCopied={onMarkRowCopied}
+            onEntriesChanged={reloadWeek}
+          />
+        )}
 
         {showAddCombo ? (
           <AddComboForm

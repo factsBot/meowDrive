@@ -351,21 +351,19 @@ export function getWeek(weekStart: string): WeekGrid {
 
   const rows: WeekGridRow[] = combos.map((combo) => {
     const hoursByDate: Record<string, number> = {};
-    const entryIdsByDate: Record<string, string[]> = {};
-    const notesByDate: Record<string, string[]> = {};
+    const entriesByDate: Record<string, TimeEntry[]> = {};
     for (const date of dates) {
       hoursByDate[date] = 0;
-      entryIdsByDate[date] = [];
-      notesByDate[date] = [];
+      entriesByDate[date] = [];
     }
     let weekTotal = 0;
-    for (const entry of entries.filter((e) => e.combo_id === combo.id)) {
-      hoursByDate[entry.work_date] += entry.hours;
-      entryIdsByDate[entry.work_date].push(entry.id);
-      if (entry.note) notesByDate[entry.work_date].push(entry.note);
+    for (const row of entries.filter((e) => e.combo_id === combo.id)) {
+      const entry = rowToEntry(row);
+      hoursByDate[entry.workDate] += entry.hours;
+      entriesByDate[entry.workDate].push(entry);
       weekTotal += entry.hours;
     }
-    return { combo, hoursByDate, entryIdsByDate, notesByDate, weekTotal };
+    return { combo, hoursByDate, entriesByDate, weekTotal };
   });
 
   const dailyTotals: Record<string, number> = {};
