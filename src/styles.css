@@ -383,6 +383,22 @@ button.danger:hover {
   margin-left: 4px;
 }
 
+.confirm-delete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  background: rgba(239, 83, 80, 0.08);
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+}
+.confirm-delete .confirm-text {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
 /* Quick log popup */
 .quicklog {
   background: var(--panel);
