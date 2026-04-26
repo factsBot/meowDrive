@@ -3,9 +3,12 @@ import { ManualEntryForm } from './components/ManualEntryForm';
 import { AddComboForm } from './components/AddComboForm';
 import { WeekGridView } from './components/WeekGrid';
 import { QuickLogPanel } from './components/QuickLogPanel';
+import { CalendarInbox } from './components/CalendarInbox';
+import { CalendarSettings } from './components/CalendarSettings';
 import { useCombos, useWeek } from './hooks/useMeow';
 import { currentWeekStart, shiftWeek, formatDayHeader } from './lib/weekUtils';
 import type { SyncState } from './lib/storage/sync';
+import { calendarEnabled, syncWeek } from './lib/calendar/calendarService';
 
 interface AppProps {
   onSignOut?: () => Promise<void>;
@@ -21,8 +24,14 @@ export default function App({ onSignOut }: AppProps = {}) {
   const { combos, reload: reloadCombos } = useCombos();
   const { week, reload: reloadWeek, loading } = useWeek(weekStart);
   const [showAddCombo, setShowAddCombo] = useState(false);
+  const [showCalendarSettings, setShowCalendarSettings] = useState(false);
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarStatus, setCalendarStatus] = useState<string | null>(null);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [syncState, setSyncState] = useState<SyncState | null>(null);
   const quickLogIntent = useMemo(readQuickLogIntent, []);
+  const calendarOn = calendarEnabled();
 
   useEffect(() => {
     const sync = window.__meowSync;
@@ -61,6 +70,26 @@ export default function App({ onSignOut }: AppProps = {}) {
     await Promise.all([reloadWeek(), reloadCombos()]);
   }, [reloadWeek, reloadCombos]);
 
+  const onSyncCalendar = useCallback(async () => {
+    if (!week) return;
+    setCalendarBusy(true);
+    setCalendarError(null);
+    setCalendarStatus(null);
+    try {
+      const result = await syncWeek(week.weekStart, week.weekEnd);
+      setCalendarStatus(
+        result.count === 0
+          ? 'No events found for this week.'
+          : `Pulled ${result.count} event${result.count === 1 ? '' : 's'}.`,
+      );
+      setCalendarRefreshKey((k) => k + 1);
+    } catch (err) {
+      setCalendarError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCalendarBusy(false);
+    }
+  }, [week]);
+
   return (
     <div className="app">
       <header className="app-header">
@@ -84,6 +113,23 @@ export default function App({ onSignOut }: AppProps = {}) {
         </button>
         <div style={{ marginLeft: 12, color: 'var(--muted)' }}>{weekLabel}</div>
         <div className="spacer" />
+        {calendarOn && (
+          <>
+            <button
+              onClick={() => void onSyncCalendar()}
+              disabled={calendarBusy || !week}
+              title="Pull this week's events from your published Outlook calendar"
+            >
+              {calendarBusy ? 'syncing calendar…' : 'Sync calendar'}
+            </button>
+            <button
+              onClick={() => setShowCalendarSettings((v) => !v)}
+              title="Configure calendar source"
+            >
+              ⚙
+            </button>
+          </>
+        )}
         {syncState && (
           <button onClick={onForceSync} title={syncState.error ?? ''}>
             {syncState.running
@@ -99,6 +145,22 @@ export default function App({ onSignOut }: AppProps = {}) {
           <button onClick={() => void onSignOut()}>Sign out</button>
         )}
       </div>
+      {(calendarStatus || calendarError) && (
+        <div
+          className={calendarError ? 'error' : 'hint'}
+          style={{ padding: '4px 16px' }}
+        >
+          {calendarError ?? calendarStatus}
+        </div>
+      )}
+      {showCalendarSettings && (
+        <div style={{ padding: '0 16px' }}>
+          <CalendarSettings
+            onClose={() => setShowCalendarSettings(false)}
+            onSaved={() => setCalendarRefreshKey((k) => k + 1)}
+          />
+        </div>
+      )}
 
       <main className="app-body">
         <div className="app-body-main">
@@ -107,6 +169,16 @@ export default function App({ onSignOut }: AppProps = {}) {
               week={week}
               onMarkRowCopied={onMarkRowCopied}
               onEntriesChanged={reloadWeek}
+            />
+          )}
+
+          {calendarOn && week && (
+            <CalendarInbox
+              weekStart={week.weekStart}
+              weekEnd={week.weekEnd}
+              combos={combos}
+              refreshKey={calendarRefreshKey}
+              onEntryCreated={reloadWeek}
             />
           )}
 

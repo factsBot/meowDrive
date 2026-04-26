@@ -38,17 +38,22 @@ electron/
   db.ts           better-sqlite3 schema + queries + audit log.
 src/
   main.tsx        Bootstraps Electron OR web (AuthGate -> initWindowMeowFromWeb).
-  App.tsx         Toolbar, week nav, sync indicator, sign-out.
+  App.tsx         Toolbar, week nav, sync indicator, calendar sync, sign-out.
   components/
-    WeekGrid.tsx        Mon-Sun grid, Copy Row to Vision (tab-separated).
+    WeekGrid.tsx          Mon-Sun grid, Copy Row to Vision (tab-separated).
     ManualEntryForm.tsx
     AddComboForm.tsx
-    QuickLog.tsx        Hotkey popup (Electron only).
-    AuthGate.tsx        Magic-link sign-in, falls back to local-only.
+    QuickLog.tsx          Hotkey popup (Electron only).
+    AuthGate.tsx          Magic-link sign-in, falls back to local-only.
+    CalendarInbox.tsx     Lists fetched events for the current week, accept/dismiss.
+    CalendarSettings.tsx  Paste/save/disconnect the published ICS URL.
   hooks/useMeow.ts      useCombos, useFavorites, useWeek.
   lib/
     weekUtils.ts        Monday-anchored week math.
     visionClipboard.ts  formatRowForVision, formatGridForReview.
+    calendar/
+      calendarService.ts  Edge Function invocation + supabase reads.
+      types.ts            CalendarEvent, CalendarSource, SyncCalendarResult.
     storage/
       dexieDb.ts        IndexedDB schema (dirty + deletedAt for sync).
       dexieStorage.ts   MeowApi impl over Dexie.
@@ -57,7 +62,10 @@ src/
       webStorage.ts     Wires Dexie + sync into one MeowApi handle.
       index.ts          initWindowMeowFromWeb, isElectronPreloadActive.
 supabase/
-  schema.sql      Tables + RLS policies. Already applied to the project.
+  schema.sql              Tables + RLS policies. Already applied to the project.
+  functions/
+    sync-calendar/        Edge Function: fetches user's published ICS,
+                          parses with ical.js, upserts into calendar_events.
 .github/workflows/
   deploy-pages.yml      Builds web bundle, deploys to GH Pages on push to main.
 ```

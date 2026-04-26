@@ -700,3 +700,70 @@ button.danger:hover {
   color: var(--muted);
   font-size: 11px;
 }
+
+.calendar-inbox {
+  margin-top: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.calendar-inbox-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.calendar-inbox-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.calendar-inbox-day-head {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.calendar-inbox-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.calendar-inbox-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.calendar-inbox-subject {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-inbox-sub {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-inbox-row-fields {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.calendar-inbox-row-fields select {
+  max-width: 220px;
+}

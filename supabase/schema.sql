@@ -73,3 +73,50 @@ create policy "entries_owner" on public.time_entries
 drop policy if exists "audit_owner" on public.audit_events;
 create policy "audit_owner" on public.audit_events
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+-- Calendar integration
+-- user_calendar_sources: per-user published-ICS URL the Sync Now button reads from.
+-- calendar_events: cache of parsed events for the inbox panel; deduped per recurrence instance.
+
+create table if not exists public.user_calendar_sources (
+  owner_id uuid primary key references auth.users(id) on delete cascade,
+  ics_url text not null,
+  last_synced_at timestamptz,
+  last_sync_error text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.calendar_events (
+  id uuid primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  ical_uid text not null,
+  recurrence_id text,
+  start_at timestamptz not null,
+  end_at timestamptz not null,
+  is_all_day boolean not null default false,
+  subject text,
+  organizer text,
+  location text,
+  status text,
+  imported_entry_id uuid references public.time_entries(id) on delete set null,
+  dismissed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists idx_calendar_events_owner_uid_start
+  on public.calendar_events (owner_id, ical_uid, start_at);
+create index if not exists idx_calendar_events_owner_range
+  on public.calendar_events (owner_id, start_at);
+
+alter table public.user_calendar_sources enable row level security;
+alter table public.calendar_events enable row level security;
+
+drop policy if exists "calendar_sources_owner" on public.user_calendar_sources;
+create policy "calendar_sources_owner" on public.user_calendar_sources
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+drop policy if exists "calendar_events_owner" on public.calendar_events;
+create policy "calendar_events_owner" on public.calendar_events
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
