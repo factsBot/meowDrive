@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ManualEntryForm } from './components/ManualEntryForm';
 import { AddComboForm } from './components/AddComboForm';
 import { WeekGridView } from './components/WeekGrid';
+import { QuickLogPanel } from './components/QuickLogPanel';
 import { useCombos, useWeek } from './hooks/useMeow';
 import { currentWeekStart, shiftWeek, formatDayHeader } from './lib/weekUtils';
 import type { SyncState } from './lib/storage/sync';
@@ -10,18 +11,31 @@ interface AppProps {
   onSignOut?: () => Promise<void>;
 }
 
+function readQuickLogIntent(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('panel') === 'quicklog';
+}
+
 export default function App({ onSignOut }: AppProps = {}) {
   const [weekStart, setWeekStart] = useState<string>(currentWeekStart());
   const { combos, reload: reloadCombos } = useCombos();
   const { week, reload: reloadWeek, loading } = useWeek(weekStart);
   const [showAddCombo, setShowAddCombo] = useState(false);
   const [syncState, setSyncState] = useState<SyncState | null>(null);
+  const quickLogIntent = useMemo(readQuickLogIntent, []);
 
   useEffect(() => {
     const sync = window.__meowSync;
     if (!sync) return;
     return sync.subscribe(setSyncState);
   }, []);
+
+  useEffect(() => {
+    if (!quickLogIntent) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('panel');
+    window.history.replaceState({}, '', url.toString());
+  }, [quickLogIntent]);
 
   const weekLabel = useMemo(() => {
     if (!week) return '';
@@ -84,33 +98,36 @@ export default function App({ onSignOut }: AppProps = {}) {
         {onSignOut && (
           <button onClick={() => void onSignOut()}>Sign out</button>
         )}
-        <span className="pill">Hotkey: Ctrl+Alt+T</span>
       </div>
 
       <main className="app-body">
-        {week && (
-          <WeekGridView
-            week={week}
-            onMarkRowCopied={onMarkRowCopied}
-            onEntriesChanged={reloadWeek}
-          />
-        )}
+        <div className="app-body-main">
+          {week && (
+            <WeekGridView
+              week={week}
+              onMarkRowCopied={onMarkRowCopied}
+              onEntriesChanged={reloadWeek}
+            />
+          )}
 
-        {showAddCombo ? (
-          <AddComboForm
-            onCreated={async () => {
-              setShowAddCombo(false);
-              await reloadCombos();
-            }}
-            onCancel={() => setShowAddCombo(false)}
-          />
-        ) : (
-          <ManualEntryForm
-            combos={combos}
-            onCreated={onCreated}
-            onAddCombo={() => setShowAddCombo(true)}
-          />
-        )}
+          {showAddCombo ? (
+            <AddComboForm
+              onCreated={async () => {
+                setShowAddCombo(false);
+                await reloadCombos();
+              }}
+              onCancel={() => setShowAddCombo(false)}
+            />
+          ) : (
+            <ManualEntryForm
+              combos={combos}
+              onCreated={onCreated}
+              onAddCombo={() => setShowAddCombo(true)}
+            />
+          )}
+        </div>
+
+        <QuickLogPanel defaultExpanded={quickLogIntent} onLogged={onCreated} />
       </main>
     </div>
   );

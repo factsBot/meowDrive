@@ -119,8 +119,21 @@ textarea:focus {
   overflow: auto;
   padding: 16px 20px;
   display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+}
+.app-body-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   gap: 16px;
+}
+@media (max-width: 900px) {
+  .app-body {
+    flex-direction: column;
+  }
 }
 
 .grid-card {
@@ -399,7 +412,223 @@ button.danger:hover {
   padding: 0 4px;
 }
 
-/* Quick log popup */
+/* Quick log side panel (web) */
+.quicklog-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+.quicklog-panel.collapsed {
+  width: 36px;
+  flex: 0 0 36px;
+  min-height: 200px;
+}
+.quicklog-panel.expanded {
+  width: 320px;
+  flex: 0 0 320px;
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .quicklog-panel.expanded,
+  .quicklog-panel.collapsed {
+    width: 100%;
+    flex: 0 0 auto;
+    max-height: none;
+  }
+  .quicklog-panel.collapsed {
+    min-height: 0;
+  }
+}
+.quicklog-toggle {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 4px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 10px;
+}
+.quicklog-toggle:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+.quicklog-toggle-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+@media (max-width: 900px) {
+  .quicklog-toggle {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 10px 14px;
+  }
+  .quicklog-toggle-label {
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+}
+.quicklog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.quicklog-title {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.quicklog-toggle-collapse {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.quicklog-toggle-collapse:hover {
+  background: var(--row-hover);
+  color: var(--text);
+}
+.quicklog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  overflow: auto;
+}
+.quicklog-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.quicklog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.quicklog-field input {
+  width: 100%;
+}
+.quicklog-favs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quicklog-fav {
+  text-align: left;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.quicklog-fav:hover {
+  background: var(--row-hover);
+}
+.quicklog-fav.active {
+  border-color: var(--accent);
+  background: var(--row-hover);
+}
+.quicklog-fav-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.quicklog-fav-codes {
+  color: var(--muted);
+  font-size: 11px;
+}
+.quicklog-durations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quicklog-duration {
+  flex: 1 1 auto;
+  min-width: 56px;
+  padding: 8px 10px;
+  font-weight: 600;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+}
+.quicklog-duration:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--row-hover);
+}
+.quicklog-duration:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.quicklog-recents {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quicklog-recent-row {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quicklog-recent-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.quicklog-recent-combo {
+  font-weight: 600;
+  color: var(--text);
+}
+.quicklog-recent-date {
+  color: var(--muted);
+}
+.quicklog-recent-fields {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.quicklog-recent-hours {
+  width: 64px;
+  flex: 0 0 auto;
+}
+.quicklog-recent-note {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Quick log popup (electron only) */
 .quicklog {
   background: var(--panel);
   border: 1px solid var(--border);

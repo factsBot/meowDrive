@@ -64,6 +64,21 @@ export default defineConfig({
                   purpose: 'any maskable',
                 },
               ],
+              shortcuts: [
+                {
+                  name: 'Quick log',
+                  short_name: 'Quick log',
+                  description: 'Open meowDrive with the quick-log panel expanded',
+                  url: base + '?panel=quicklog',
+                  icons: [
+                    {
+                      src: 'favicon.svg',
+                      sizes: 'any',
+                      type: 'image/svg+xml',
+                    },
+                  ],
+                },
+              ],
             },
             workbox: {
               globPatterns: ['**/*.{js,css,html,svg,png,ico,webp}'],
